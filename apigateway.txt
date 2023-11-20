@@ -1,0 +1,158 @@
+openapi: 3.0.0
+info:
+  title: Sample API
+  version: 1.0.0
+servers:
+- url: https://d5d1g0kdl9uq2smvd01d.apigw.yandexcloud.net
+paths:
+  /:
+    get:
+      x-yc-apigateway-integration:
+        type: dummy
+        content:
+          '*': Hello, World!
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain
+  /welcome:
+    get:
+      summary: Get static welcome message
+      description: Returns static welcom message
+      x-yc-apigateway-integration:
+        type: dummy
+        content:
+          '*': Welcome to an exciting API about pets!
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain
+  /pets:
+    get:
+      summary: Get pets
+      description: Returns a pet or list of pets
+      parameters:
+        - name: type
+          in: query
+          description: Type of pet (cat/dog/etc...)
+          required: false
+          schema:
+            type: string
+        - name: id
+          in: query
+          description: ID of pet
+          required: false
+          schema:
+            type: integer
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: d4ercof2v9csrnjsdbi4
+        content:
+          '*': 
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain
+    post:
+      summary: Add pet
+      description: Add new pet to YDB
+      requestBody:
+        description: Pet object to be added
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: d4ercof2v9csrnjsdbi4
+        content:
+          '*': 
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain
+    delete:
+      summary: Delete pet
+      description: Delete pet from YDB
+      parameters:
+        - name: id
+          in: query
+          description: ID of pet
+          required: true
+          schema:
+            type: integer
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: d4ercof2v9csrnjsdbi4
+        content:
+          '*': 
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain
+    patch:
+      summary: Change pet name
+      description: Patch new name to existing pet
+      parameters:
+        - name: id
+          in: query
+          description: ID of pet
+          required: true
+          schema:
+            type: integer
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: d4ercof2v9csrnjsdbi4
+        content:
+          '*': 
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain
+  /image/{urlname}:
+    get:
+      summary: Serve static pet image from Yandex Cloud Object Storage
+      parameters:
+        - name: urlname
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: animals
+        object: '{urlname}'
+        error_object: error.html
+  /caterror/{status_code}:
+    get:
+      summary: Serve cat error image from third party API
+      parameters:
+        - name: status_code
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: http
+        url: https://http.cat/{status_code}
+  /random/cat:
+    get:
+      summary: Get random cat JSON with image URL from third party API
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: http
+        url: https://api.thecatapi.com/v1/images/search
+        headers:
+          x-api-key: x-api-key
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        type:
+          type: string
+        name:
+          type: string
+      example:
+        type: "dog"
+        name: "Rex"
